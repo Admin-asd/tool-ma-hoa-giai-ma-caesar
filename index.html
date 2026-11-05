@@ -1,0 +1,223 @@
+<!doctype html>
+<!-- Vị trí file: wp-content/gb-tools/encoding-security/ma-hoa-giai-ma-caesar.html -->
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Công cụ mã hóa và giải mã Caesar online - Caesar Cipher</title>
+<meta name="description" content="Mã hóa và giải mã mật mã Caesar trực tuyến nhanh chóng. Dịch chuyển bảng chữ cái với thanh trượt khóa tùy chỉnh bảo mật ngay trên trình duyệt.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.11"></script>
+<style type="text/tailwindcss">
+  @theme {
+    --font-sans: Roboto, ui-sans-serif, system-ui, sans-serif;
+    --color-primary: #fdca1e; --color-primary-hover: #e8b008; --color-primary-soft: #fffbeb;
+    --color-primary-ink: #9c6406; --color-ink: #0f172a; --color-neutral: #e2e8f0;
+  }
+</style>
+</head>
+<body class="bg-white font-sans text-ink antialiased">
+<main class="mx-auto max-w-4xl p-4 sm:p-6 space-y-6">
+  
+  <div class="bg-white border border-neutral rounded-2xl p-6 shadow-xs space-y-6">
+    
+    <!-- Hàng nút chọn chế độ: Mã Hóa / Giải Mã -->
+    <div class="flex items-center justify-between">
+      <div class="flex gap-2">
+        <button type="button" id="btnModeEncode" onclick="setMode('encode')" class="px-5 py-2 rounded-full font-bold text-xs bg-slate-100 text-slate-700 hover:bg-amber-50 cursor-pointer transition-colors">Mã Hóa</button>
+        <button type="button" id="btnModeDecode" onclick="setMode('decode')" class="px-5 py-2 rounded-full font-bold text-xs bg-primary text-ink shadow-xs cursor-pointer transition-colors">Giải Mã</button>
+      </div>
+      <div class="text-xs font-bold text-primary-ink bg-primary-soft border border-amber-200 px-3 py-1 rounded-xl">
+        Client-side 100%
+      </div>
+    </div>
+
+    <!-- Giá trị dịch chuyển & Thanh trượt (Slider) -->
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <label for="shiftNumber" class="font-bold text-sm text-ink">Giá trị dịch chuyển</label>
+        <span id="shiftDisplay" class="font-bold text-sm text-primary-ink">5</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <input type="number" id="shiftNumber" value="5" min="1" max="25" oninput="syncInputToSlider()" class="w-20 rounded-xl border border-neutral p-2.5 text-sm font-mono font-bold text-ink outline-none focus:border-primary bg-white text-center">
+        <input type="range" id="shiftSlider" min="1" max="25" value="5" oninput="syncSliderToInput()" class="w-full accent-amber-500 cursor-pointer h-2 bg-slate-200 rounded-lg">
+      </div>
+    </div>
+
+    <!-- Ô nhập văn bản (Đầu vào) -->
+    <div class="space-y-2">
+      <div class="flex items-center justify-between text-xs font-semibold text-slate-600">
+        <span id="inputLabel">Văn bản mã hóa cần giải mã</span>
+        <div><span id="inputCharCount">0</span> ký tự · <span id="inputByteCount">0</span> byte</div>
+      </div>
+      <textarea id="inputText" rows="5" oninput="processCaesar()" placeholder="Nhập văn bản cần xử lý..." class="w-full rounded-xl border border-neutral p-3.5 text-sm font-mono outline-none focus:border-primary bg-white resize-y leading-relaxed">hmft</textarea>
+    </div>
+
+    <!-- Hàng nút hành động thao tác -->
+    <div class="flex flex-wrap items-center gap-2 pt-1">
+      <button type="button" id="btnActionLabel" onclick="processCaesar()" class="min-h-10 rounded-xl bg-primary px-4 font-bold text-xs text-ink hover:bg-primary-hover shadow-xs cursor-pointer">
+        Tự động giải mã
+      </button>
+      <button type="button" onclick="swapText()" class="min-h-10 rounded-xl border border-neutral px-4 font-semibold text-xs hover:border-primary bg-white cursor-pointer">
+        Tráo đổi
+      </button>
+      <button type="button" onclick="copyOutput()" class="min-h-10 rounded-xl border border-neutral px-4 font-semibold text-xs hover:border-primary bg-white cursor-pointer">
+        Sao chép
+      </button>
+      <button type="button" onclick="downloadOutput()" class="min-h-10 rounded-xl border border-neutral px-4 font-semibold text-xs hover:border-primary bg-white cursor-pointer flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Tải xuống
+      </button>
+      <button type="button" onclick="clearAll()" class="min-h-10 rounded-xl border border-neutral px-4 font-semibold text-xs hover:border-primary bg-slate-100 cursor-pointer">
+        Thông thoáng
+      </button>
+      <button type="button" onclick="resetDefault()" class="min-h-10 rounded-xl border border-neutral px-4 font-semibold text-xs hover:border-primary bg-white cursor-pointer">
+        Cài lại
+      </button>
+    </div>
+
+    <!-- Ô kết quả đầu ra -->
+    <div class="space-y-2 pt-2 border-t border-neutral">
+      <div class="flex items-center justify-between text-xs font-semibold text-slate-600">
+        <span>Kết quả</span>
+        <div><span id="outputCharCount">0</span> ký tự · <span id="outputByteCount">0</span> byte</div>
+      </div>
+      <textarea id="outputText" rows="5" readonly placeholder="Kết quả sẽ xuất hiện ở đây..." class="w-full rounded-xl border border-neutral p-3.5 text-sm font-mono outline-none bg-slate-50 resize-y leading-relaxed select-all"></textarea>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+  let currentMode = 'decode'; // Mặc định theo ảnh mẫu là Giải Mã
+
+  async function gbCopy(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+    const t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove(); return ok;
+  }
+
+  function gbDownload(data, filename, type = 'application/octet-stream') {
+    const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    const btnEncode = document.getElementById('btnModeEncode');
+    const btnDecode = document.getElementById('btnModeDecode');
+    const inputLabel = document.getElementById('inputLabel');
+    const btnAction = document.getElementById('btnActionLabel');
+
+    if (mode === 'encode') {
+      btnEncode.className = 'px-5 py-2 rounded-full font-bold text-xs bg-primary text-ink shadow-xs cursor-pointer transition-colors';
+      btnDecode.className = 'px-5 py-2 rounded-full font-bold text-xs bg-slate-100 text-slate-700 hover:bg-amber-50 cursor-pointer transition-colors';
+      inputLabel.textContent = 'Văn bản cần mã hóa';
+      btnAction.textContent = 'Tự động mã hóa';
+    } else {
+      btnDecode.className = 'px-5 py-2 rounded-full font-bold text-xs bg-primary text-ink shadow-xs cursor-pointer transition-colors';
+      btnEncode.className = 'px-5 py-2 rounded-full font-bold text-xs bg-slate-100 text-slate-700 hover:bg-amber-50 cursor-pointer transition-colors';
+      inputLabel.textContent = 'Văn bản mã hóa cần giải mã';
+      btnAction.textContent = 'Tự động giải mã';
+    }
+    processCaesar();
+  }
+
+  function syncInputToSlider() {
+    let val = parseInt(document.getElementById('shiftNumber').value, 10);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > 25) val = 25;
+    document.getElementById('shiftSlider').value = val;
+    document.getElementById('shiftDisplay').textContent = val;
+    processCaesar();
+  }
+
+  function syncSliderToInput() {
+    const val = document.getElementById('shiftSlider').value;
+    document.getElementById('shiftNumber').value = val;
+    document.getElementById('shiftDisplay').textContent = val;
+    processCaesar();
+  }
+
+  function caesarShift(str, shift, mode) {
+    if (mode === 'decode') {
+      shift = (26 - (shift % 26)) % 26;
+    } else {
+      shift = shift % 26;
+    }
+
+    return str.split('').map(char => {
+      const code = char.charCodeAt(0);
+      if (code >= 97 && code <= 122) {
+        return String.fromCharCode(((code - 97 + shift) % 26) + 97);
+      }
+      if (code >= 65 && code <= 90) {
+        return String.fromCharCode(((code - 65 + shift) % 26) + 65);
+      }
+      return char;
+    }).join('');
+  }
+
+  function processCaesar() {
+    const text = document.getElementById('inputText').value;
+    let shift = parseInt(document.getElementById('shiftNumber').value, 10);
+    if (isNaN(shift)) shift = 5;
+
+    // Thống kê ký tự & byte đầu vào
+    const encoder = new TextEncoder();
+    const inputBytes = encoder.encode(text);
+    document.getElementById('inputCharCount').textContent = text.length;
+    document.getElementById('inputByteCount').textContent = inputBytes.length;
+
+    const result = caesarShift(text, shift, currentMode);
+    document.getElementById('outputText').value = result;
+
+    // Thống kê ký tự & byte đầu ra
+    const outputBytes = encoder.encode(result);
+    document.getElementById('outputCharCount').textContent = result.length;
+    document.getElementById('outputByteCount').textContent = outputBytes.length;
+  }
+
+  function swapText() {
+    const outVal = document.getElementById('outputText').value;
+    document.getElementById('inputText').value = outVal;
+    // Đổi chiều mode
+    setMode(currentMode === 'encode' ? 'decode' : 'encode');
+  }
+
+  async function copyOutput() {
+    const val = document.getElementById('outputText').value;
+    if (!val) return;
+    const ok = await gbCopy(val);
+    if (ok) alert('Đã sao chép kết quả vào bộ nhớ tạm!');
+  }
+
+  function downloadOutput() {
+    const val = document.getElementById('outputText').value;
+    if (!val) return;
+    const blob = new Blob([val], { type: 'text/plain;charset=utf-8' });
+    gbDownload(blob, 'caesar-result.txt');
+  }
+
+  function clearAll() {
+    document.getElementById('inputText').value = '';
+    processCaesar();
+  }
+
+  function resetDefault() {
+    setMode('decode');
+    document.getElementById('shiftNumber').value = 5;
+    document.getElementById('shiftSlider').value = 5;
+    document.getElementById('shiftDisplay').textContent = 5;
+    document.getElementById('inputText').value = 'hmft';
+    processCaesar();
+  }
+
+  // Khởi tạo chạy lần đầu
+  processCaesar();
+</script>
+</body>
+</html>
